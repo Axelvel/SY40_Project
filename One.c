@@ -4,7 +4,8 @@
 #include <sys/sem.h>
 #include <errno.h>
 #include <sys/types.h>
-//#include <sys/ipc.h>
+#include <sys/wait.h>
+#include <sys/ipc.h>
 //#include <sys/msg.h>
 
 #define IFLAGS (SEMPERM | IPC_CREAT)
