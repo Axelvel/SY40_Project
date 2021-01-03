@@ -23,10 +23,9 @@ void * bocal() {
     pthread_mutex_lock(&mutex);
     printf("Placer un bocal\n");
     
-   // pthread_cond_signal(&cbocal); //
+	//pthread_cond_signal(&cbocal); //
    
-   sleep(5);
-  
+	//sleep(1); //Marche avec le sleep
     
     pthread_cond_wait(&cvalve, &mutex);
 
@@ -39,24 +38,18 @@ void * bocal() {
 
 void * valve() {
     pthread_mutex_lock(&mutex);
-    
-   // pthread_cond_wait(&cbocal, &mutex);
+   
+		
+	//pthread_cond_wait(&cbocal, &mutex);
 
     printf("Ouverture valve\n");
     
-    sleep(2);
-
     pthread_cond_signal(&cclock);
-    
-    sleep(2);
-    
     
     pthread_cond_wait(&attendre, &mutex);
 
     printf("Fermeture valve\n");
-    pthread_cond_signal(&cvalve); //
-    
-    //pthread_cond_signal(&fermer_valve); //
+    pthread_cond_signal(&cvalve); 
     
     pthread_mutex_unlock(&mutex);
     pthread_exit(NULL);
@@ -66,13 +59,15 @@ void * valve() {
 
 void * clockt() {
     pthread_mutex_unlock(&mutex);
-    
+
 	pthread_cond_wait(&cclock, &mutex);
     
     printf("Horloge lancée\n");
-    sleep(5);
+    sleep(2);
     printf("Horloge finie\n");
     pthread_cond_signal(&attendre);
+    
+
     pthread_mutex_unlock(&mutex);
     pthread_exit(NULL);
 }
@@ -81,9 +76,6 @@ void * clockt() {
 int main(int argc, char const *argv[]) {
 
   pthread_mutex_init(&mutex, NULL); //Initialisation du mutex
-
-
-
 
   for (int j = 0; j < N; j++) {
     printf("\n");
@@ -100,25 +92,10 @@ int main(int argc, char const *argv[]) {
 
     sleep(3);
   }
+  
+  pthread_mutex_destroy(&mutex);
 
   printf("\nTerminé\n");
-
-
-  // creation de la thread valve
-  //pthread_create(tid+NbTh,0,(void *(*)())fonc_coiffeur,(void*)NbTh);
-
-  //creation des threads clients
-	 //for(num=0;num<NbTh;num ++){
-		// pthread_create(tid+num,0,(void *(*)())fonc_client,(void*)num);
-		// usleep(100000);
-		// }
-
-
-
-
-	//attend la fin de toutes les threads clients
-	// for(num=0;num<NbTh;num ++)
-	// 	pthread_join(tid[num],NULL);
 
 
   return 0;
