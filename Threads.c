@@ -12,7 +12,7 @@
 
 //pthread_t tid[NbTh+1]; //
 pthread_mutex_t mutex;
-pthread_cond_t ouvrir_valve, fermer_valve;
+pthread_cond_t cbocal, cvalve, cclock, attendre;
 
 pthread_t tbocal;
 pthread_t tvalve;
@@ -23,53 +23,58 @@ void * bocal() {
     pthread_mutex_lock(&mutex);
     printf("Placer un bocal\n");
     
-    pthread_cond_signal(&ouvrir_valve); //
-    pthread_cond_wait(&fermer_valve, &mutex); //
+   // pthread_cond_signal(&cbocal); //
+  
+    
+    pthread_cond_wait(&cvalve, &mutex);
 
     printf("Enlever bocal\n");
     
     pthread_mutex_unlock(&mutex);
-    pthread_exit(NULL);
+    //pthread_exit(NULL);
 
 }
 
 void * valve() {
     pthread_mutex_lock(&mutex);
     
-    pthread_cond_wait(&ouvrir_valve, &mutex); //
+   // pthread_cond_wait(&cbocal, &mutex);
 
     printf("Ouverture valve\n");
     
+    pthread_cond_signal(&cclock);
     
+    printf("t");
+    
+    pthread_cond_wait(&attendre, &mutex);
+    
+
     
     
    
 
     printf("Fermeture valve\n");
-    pthread_cond_signal(&fermer_valve); //
+    pthread_cond_signal(&cvalve); //
+    
+    //pthread_cond_signal(&fermer_valve); //
     
     pthread_mutex_unlock(&mutex);
-    pthread_exit(NULL);
+    //pthread_exit(NULL);
 
-}
-
-void * horloge(int i) {
-    pthread_mutex_lock(&mutex);
-    printf("Horloge lancée\n");
-    sleep(i);
-    printf("Horloge finie\n");
-    pthread_mutex_unlock(&mutex);
-    pthread_exit(NULL);
 }
 
 
 void * clockt() {
     pthread_mutex_unlock(&mutex);
+    printf("a");
+    pthread_cond_wait(&cclock, &mutex);
+    printf("b");
     printf("Horloge lancée\n");
     sleep(5);
     printf("Horloge finie\n");
+    pthread_cond_signal(&attendre);
     pthread_mutex_unlock(&mutex);
-    pthread_exit(NULL);
+    //pthread_exit(NULL);
 }
 
 
