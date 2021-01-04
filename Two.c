@@ -12,12 +12,6 @@
 
 #define SEMPERM 0600		 /* Permission */
 
-#define N 3 //Nombre de bocaux à produire
-#define M 2 //Nombre de bocaux 2 à produire
-
-#define max(a,b) (a>=b?a:b)
-#define min(a,b) (a<=b?a:b)
-
 
 /*********************************************************************/
 /*  Pour Operation P et V 					     */
@@ -63,38 +57,37 @@ void V(int semnum) { //Wake
 }
 
 
-void bocal(int n){
+void bocal(int n, int goal){
   if (!fork()) {
       
+      int count = 0;
       
-        P(5);
-        printf("\n");
-        printf("Nouveau Bocal : \n");
+      while(count < goal){
           
-        
-        printf("Placer un bocal\n");
-        V(1);
-      
-        semctl(sem_id, 0, SETVAL, n);
+          P(5);
 
-        P(4);
-        printf("Enlever bocal\n");
+          printf("\nNouveau bocal %d\n", count);
+            
           
-        V(5);
+          printf("Placer un bocal\n");
+          V(1);
+        
+          semctl(sem_id, 0, SETVAL, n);
+
+          P(4);
+          printf("Enlever bocal\n");
+            
+          V(5);
+          
+          sleep(2);
+          count++;
+      }
+        
       
 
     exit(0);
   }
 }
-
-
-
-
-void bocal2(){
-    //printf("GROS bocal\n");
-    bocal(2);
-}
-
 
 
 
@@ -143,47 +136,37 @@ void horloge(int i){
 int main(int argc, char const *argv[]) {
 
   int i,semid; //Semid : identificateur des sémaphores
-    
+    initsem(SKEY); //On initialise le tableau de sémaphores
     
     int a;
-    //int b;
+    int b;
     
     do {
         printf("Enter the number of bocals (type 1): ");
         fflush(stdin);
     } while (scanf("%d", &a) != 1 || a <= 0);
-    /*
+    
     do {
         printf("Enter the number of bocals (type 2): ");
         fflush(stdin);
     } while (scanf("%d", &b) != 1 || b <= 0);
-    */
-   // printf("MAX = %d\n", max(a,b));
-   // printf("Min = %d\n", min(a,b));
-
-  for (int j = 0; j < a; j++) {
-      initsem(SKEY); //On initialise le tableau de sémaphores
+    
       
       
-      //printf("\n j = %d\n", j);
       
 
-      bocal(1);
-   
-      bocal2();
+    bocal(1, a); //Machine 1, with 'a' bocals (type 1) to poduce
+    bocal(2, b); //Machine 2, with 'b' bocals (type 2) to produce
       
-      
-      V(5);
+      V(5); //Launch a machine
       
       valve();
       horloge(1);
 
-      for (i=1; i<=2; i++) wait(0);
+      for (i=1; i<=2; i++) wait(0); //Ends the 2 machines
       
       sleep(1);
     
-  }
-
     
     
 
