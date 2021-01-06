@@ -1,5 +1,5 @@
 
-all: executable clean
+all: utils.o executable clean
 
 executable: semaphores threads
 	gcc -o main main.c
@@ -10,11 +10,11 @@ semaphores: semaphores.o
 semaphores.o: semaphores.c
 	gcc -c semaphores.c
 
-threads: Threads.o
-	gcc -o threads Threads.o utils.o
+threads: threads.o
+	gcc -o threads threads.o utils.o -pthread
 
-Threads.o: Threads.c
-	gcc -c Threads.c
+threads.o: threads.c
+	gcc -c threads.c -pthread
 	
 utils.o: utils.c
 	gcc -c utils.c
