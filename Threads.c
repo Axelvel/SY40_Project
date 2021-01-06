@@ -3,35 +3,43 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <errno.h>
-
-//#define NbTh 10      //Nombre de processus symbolisant les clients
-//#define N  8	//Nombre de chaises dans le salon de coiffure
-
-#define N 3 //Nombre de bocaux à produire
+#include "utils.h"
 
 
-//pthread_t tid[NbTh+1]; //
+
+
+
+#define N 100 //Maximum number of bocals
+
+
 pthread_mutex_t mutex;
-pthread_cond_t cbocal, cvalve, cclock, attendre, nouveau;
+pthread_cond_t cbocal, cvalve, cclock, cwait, nouveau;
 
-pthread_t tbocal[10];
+pthread_t tbocal[N];
 pthread_t tvalve;
 pthread_t thorloge;
 
 
-void * bocal() {
+long bocalType;
+int count;
+
+void * bocal(void * data) {
     pthread_mutex_lock(&mutex);
     
     pthread_cond_wait(&nouveau, &mutex);
     
-    printf("Placer un bocal\n");
+    
+    bocalType = (long) data;
+    count++;
+    
+    printf("\nPlacer un bocal (%d)\n", count);
     
 	pthread_cond_signal(&cbocal);
   
     
     pthread_cond_wait(&cvalve, &mutex);
 
-    printf("Enlever bocal\n\n");
+    printf("Enlever bocal\n");
     
     pthread_cond_signal(&nouveau);
     
@@ -40,26 +48,6 @@ void * bocal() {
 
 }
 
-void * bocal2() {
-    pthread_mutex_lock(&mutex);
-    
-    //pthread_cond_wait(&nouveau, &mutex);
-    
-    printf("Placer un bocal\n");
-    
-	pthread_cond_signal(&cbocal);
-  
-    
-    pthread_cond_wait(&cvalve, &mutex);
-
-    printf("Enlever bocal\n\n");
-    
-    //pthread_cond_signal(&nouveau);
-    
-    pthread_mutex_unlock(&mutex);
-    //pthread_exit(NULL);
-
-}
 
 void * valve() {
     pthread_mutex_lock(&mutex);
@@ -70,13 +58,16 @@ void * valve() {
 
     printf("Ouverture valve\n");
     
-    for (int i = 0; i < 2;i++){
-    //printf("A ");
+    //for (int i = 0; i < l->value; i++){
+   for (int i = 0; i < bocalType; i++){
     pthread_cond_signal(&cclock);
     
-    pthread_cond_wait(&attendre, &mutex);
-    //printf("B ");
+    pthread_cond_wait(&cwait, &mutex);
+    
+    
 	}
+	
+	//l = deleteHead(l);
     printf("Fermeture valve\n");
     pthread_cond_signal(&cvalve); 
 		
@@ -89,17 +80,19 @@ void * valve() {
 }
 
 
-void * clockt() {
+void * clockt(void * data) {
     pthread_mutex_unlock(&mutex);
+    
+    long i = (long) data;
     
 	while(1) {
 		
 	pthread_cond_wait(&cclock, &mutex);
     
     printf("Horloge lancée\n");
-    sleep(2);
+    sleep(i);
     printf("Horloge finie\n");
-    pthread_cond_signal(&attendre);
+    pthread_cond_signal(&cwait);
     
 	}
 
@@ -112,46 +105,60 @@ int main(int argc, char const *argv[]) {
 
   //pthread_mutex_init(&mutex, NULL); //Initialisation du mutex
   
+	int count = 0;
+  
 	if (pthread_mutex_init(&mutex, NULL) != 0) {
 		printf("mutex failed");
-	}else {
-		printf("mutex initialized!");
 	}
   //for (int j = 0; j < N; j++) {
     printf("\n");
    // printf("Bocal : %i\n", j);
-
+   
+	int numberOfBocals;
+    long type;
+    long time;
+    
+    do {
+        printf("\nHow many bocals do you want to produce?: ");
+        fflush(stdin);
+    } while (scanf("%d", &numberOfBocals) != 1 || numberOfBocals <= 0);
+    
+    
+    for (int i = 0; i < numberOfBocals; i++) {
+        
+        printf("\nBocal %d\n", i);
+        
+        do {
+            printf("What type: ");
+            fflush(stdin);
+        } while (scanf("%ld", &type) != 1 || type <= 0);
+        
+        
+        pthread_create(&tbocal[i], NULL, bocal, (void *) type);
+ 
+    }
+    
+    do {
+        printf("\nHow long should the timer be?: ");
+        fflush(stdin);
+    } while (scanf("%ld", &time) != 1 || time <= 0);
     
    
-    pthread_create(&thorloge, NULL, clockt, NULL);
+    pthread_create(&thorloge, NULL, clockt, (void *) time);
     pthread_create(&tvalve, NULL, valve, NULL);
-    //sleep(1);
-   // for (int i = 0; i < 3; i++ ) {
-		 pthread_create(&tbocal[0], NULL, bocal, NULL);
-		 //sleep(1);
-		 pthread_create(&tbocal[1], NULL, bocal, NULL);
-		 
-		 pthread_create(&tbocal[2], NULL, bocal, NULL);
-		 //sleep(1);
-		 pthread_create(&tbocal[3], NULL, bocal, NULL);
+ 
 		 
 		 
 		 sleep(1);
-		 pthread_cond_signal(&nouveau);
-   // }
-    //pthread_exit(NULL);
-
-    /*for (int i = 0; i < 3; i++ )*/ pthread_join(tbocal[0], NULL);
-    //pthread_join(tvalve, NULL);
-    //pthread_join(thorloge, NULL);
-	pthread_join(tbocal[1], NULL);
 	
-	pthread_join(tbocal[2], NULL);
-	
-	pthread_join(tbocal[3], NULL);
-
-    //sleep(3);
- // }
+		 
+		 startProduction(1);
+		 
+		 //pthread_cond_signal(&cnew);
+		 
+		 for (int i = 0; i < numberOfBocals; i++) {
+			 pthread_join(tbocal[i], NULL);
+		}
   
   
   pthread_mutex_destroy(&mutex);
