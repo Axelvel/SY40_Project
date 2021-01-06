@@ -8,7 +8,7 @@ semaphores: semaphores.o
 	gcc -o semaphores semaphores.o utils.o
 
 semaphores.o: semaphores.c
-	gcc -c Two.c
+	gcc -c semaphores.c
 
 threads: Threads.o
 	gcc -o threads Threads.o utils.o
