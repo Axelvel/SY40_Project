@@ -8,7 +8,6 @@
 #include <sys/ipc.h>
 #include <pthread.h>
 
- 
 
 #define IFLAGS (SEMPERM | IPC_CREAT)
 #define SKEY   (key_t) IPC_PRIVATE //CLE CREE AU HASARD
@@ -25,6 +24,7 @@ struct sembuf sem_oper_V ;  /* Operation V */
 /*********************************************************************/
 
 pthread_cond_t nouveau;
+
 
 int initsem(key_t semkey){
 
@@ -44,31 +44,44 @@ int initsem(key_t semkey){
 	perror("Erreur initsem");
 	return (-1);
     } else return (sem_id);
+    
 }
+
 
 void P(int semnum) { //Wait
-	sem_oper_P.sem_num = semnum; //numero du semaphore
-	sem_oper_P.sem_op  = -1 ; //valeur pour modifier le sempaphore
-	sem_oper_P.sem_flg = 0 ; //sem_undo ?
-	semop(sem_id,&sem_oper_P,1); //effectue l'opération sur le sémaphore
+    
+	sem_oper_P.sem_num = semnum; //Numero du semaphore
+	sem_oper_P.sem_op  = -1 ; //Valeur pour modifier le sempaphore
+	sem_oper_P.sem_flg = 0 ; //Sem_undo ?
+	semop(sem_id,&sem_oper_P,1); //Effectue l'opération sur le sémaphore
+    
 }
 
+
 void V(int semnum) { //Wake
+    
 	sem_oper_V.sem_num = semnum;
 	sem_oper_V.sem_op  = 1 ;
 	sem_oper_V.sem_flg  = 0 ;
 	semop(sem_id,&sem_oper_V,1);
+    
 }
+
 
 void startProduction(int mode){
     
-    if (mode == 0) {
+    if (mode == 0) { //Mode Semaphores choisi
+        
         V(5);
-    } else if (mode == 1) {
+        
+    } else if (mode == 1) { //Mode Threads choisi
+        
         pthread_cond_signal(&nouveau);
-        printf("Threads");
+        
     } else {
+        
         printf("Error\n");
+        
     }
 }
 
