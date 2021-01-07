@@ -10,23 +10,23 @@
 #include "utils.h"
 
 
-#define SKEY   (key_t) IPC_PRIVATE //CLE CREE AU HASARD
-int sem_id ; //identificateur des sémaphores
+#define SKEY   (key_t) IPC_PRIVATE //Cle creee au hasard
+int sem_id ; //Identificateur des semaphores
 
 
-void bocal(int n, int goal){
+void bocal(int type, int num){ //Fonction creant un processus bocal
     
     
     if (!fork()) {
         
       
-        int count = 0;
+        int count = 0; //Initialisation du compteur de bocaux de la machine
       
-        while(count < goal) {
+        while(count < num) {
           
             P(5);
 
-            printf("\nNouveau bocal %d (Type %d)\n", count, n);
+            printf("\nNouveau bocal %d (Type %d)\n", count, type);
             
           
             printf("Placer un bocal\n");
@@ -34,7 +34,7 @@ void bocal(int n, int goal){
             V(1);
           
         
-            semctl(sem_id, 0, SETVAL, n);
+            semctl(sem_id, 0, SETVAL, type); //Affecte la valeur du type au semaphore 0 (pour pouvoir la reutiliser dans le processus valve)
 
             P(4);
           
@@ -42,7 +42,7 @@ void bocal(int n, int goal){
             
             V(5);
     
-            count++;
+            count++; //Incrémente le compteur de bocaux
         }
 
         exit(0);
@@ -63,9 +63,9 @@ void valve() {
             
             printf("Ouverture valve\n");
             
-            int value = semctl(sem_id, 0, GETVAL);
+            int value = semctl(sem_id, 0, GETVAL); //Recupere la valeur du type de bocal actuel
             
-            for (int i = 0; i < value; i ++) {
+            for (int i = 0; i < value; i ++) { //Lancement puis attente de la fin du processus horloge
                 
                 V(2);
                 
@@ -119,7 +119,7 @@ int main(int argc, char const *argv[]) {
     int num;
     int time;
     
-    do {
+    do { //Combien de machines de production
         
         printf("\nHow many production machines do you want?: ");
         fflush(stdin);
@@ -131,24 +131,24 @@ int main(int argc, char const *argv[]) {
         
         printf("\nMachine %d\n", i);
         
-        do {
+        do { //Quel type de bocal associer a la machine
             
             printf("What type?: ");
             fflush(stdin);
             
         } while (scanf("%d", &type) != 1 || type <= 0);
         
-        do {
+        do { //Quelle quantite la machine devra produire
             
             printf("How many?: ");
             fflush(stdin);
             
         } while (scanf("%d", &num) != 1 || num <= 0);
         
-        bocal(type, num);
+        bocal(type, num); //Lancement du processus bocal adequat
     }
     
-    do {
+    do { //Definition de la duree de l'horloge
         
         printf("\nHow long should the timer be?: ");
         fflush(stdin);
@@ -156,13 +156,13 @@ int main(int argc, char const *argv[]) {
     } while (scanf("%d", &time) != 1 || time <= 0);
     
 
-      
+    //Lancement de la valve et de l'horloge
     valve();
     horloge(time);
     
-    startProduction(0);
+    startProduction(0); //Lancement de la chaine de production
 
-    for (i=1; i<=numberOfMachines; i++) wait(0); //Ends the machines
+    for (i=1; i<=numberOfMachines; i++) wait(0); //Attend la fin des machines
       
     sleep(1);
     
