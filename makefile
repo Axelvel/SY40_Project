@@ -19,5 +19,5 @@ threads.o: threads.c
 utils.o: utils.c
 	gcc -c utils.c
 	
-clean :
+clean:
 	rm *.o
